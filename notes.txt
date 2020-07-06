@@ -1,0 +1,227 @@
+var x = -(5 + 2) - 10 / 20 * 10;
+
+var  
+  clause:
+    type: declare
+  global:
+    index: 00
+    stack: 00
+x
+  clause:
+    type: identifier
+    value: x
+  global:
+    index: 01
+    stack: 01
+=
+  clause:
+    type: assign
+  global:
+
+
+hmm, so I'm already running into this being weird or whatever....
+no, not quire, I'm getting a little bit closer
+
+
+well, let's think about it....
+
+so I have something like...
+
+var
+  clause:
+    type: declare
+
+what this needs to know is that the next thing needs to be an identifier that hasn't been delcared yet
+
+
+so it's kind of like 
+var x = 1;
+is really
+var x;
+x = 1;
+
+which is how we would do assembly anyway, right?
+
+ok, so that' find, so
+
+we have this declare clause, right, and we declare it, but then what do we do....
+
+like the declare clause needs to start a new kind of... stack or something....
+
+how can we lump these two things together
+
+like the operation is something like, I need to know the value to the right of me to do anything with me, so go find that part, ok?
+
+
+1 op: declare x
+if next token is not assign 
+  throw error
+if next token is not semicolon
+2 op assign x 
+  stack = 2
+3 op negate
+
+op parens
+
+op subtract 5, 2
+
+like really, if you think about it, it makes more sense to the right side first, right...
+like if we can just print the ops in the right way...
+
+it's almost like i want to throw everything to the right, unix style piping
+
+
+so, the idea could be something like this....
+
+
+
+var x = -(5 + 2) - 10 / 20 * 10;
+
+01 declare x
+02 stack [assign x]
+03 stack [assign x]
+04 stack [assign x, negate]
+05 stack [assign x, negate, parens]
+06 literal 5
+07 plus
+08 liter 2
+09 stack [assign x, negate]
+10 negate, stack [assign x]
+11 minus
+12 literal 10
+13 divide
+14 literal 20
+15 multiply
+16 literal 10
+17 assign x
+
+for a final code of...
+
+declare x
+5
++
+2
+negate
+minus
+10
+divide
+20
+times
+10
+
+
+so, this is the thing right here, I don't think
+
+
+I mean, this is the... what heck else is going on here, how long can this thing....
+
+So it needs to keep track of the operator precedence, this is one more problem with this stacking dealio....
+
+
+ok, so the problem that this is running into is that i need something more than two.. no, it's just this precedence thing means I need to do certain things
+before or after other things, it needs to rewrite it to do things in the correct order, or something like this.
+
+Well... if we're not doing things from left to right, than this is doing something else
+so, what it needs to have is some sort of intermediate values to do this, right, it needs to do this... I mean, I could do something more than this...
+
+like the problem with something like this is it can't all just go to the right... right? I mean, that would be a little bit wacky to translate into, no?
+
+i mean, if I can store things into intermediate values, than we're good.
+
+like some sort of grouping operator, 
+
+like here is the problem with this, what the heck does this minus thing even mean...
+and why does the negate haappen after, where the thing on the... yeah, what if we have a left and a right things
+
+
+
+
+so the form should look something like this....
+
+
+i mean, jeez, let's just reverse this guy real good
+
+var x = -(5 + 2) - 10 / 20 * 10;
+
+left
+  left
+    x
+  declare
+right
+  left
+    left
+      5
+    right
+      2
+    plus
+  right
+    left
+      left
+        10
+      right
+        20
+    right
+      10
+    times
+  minus
+assign
+
+so I mean, this isn't a horrible idea, but it is a lot worse that
+but this isn't the... this is probably worse that a tree, like it's just like having a tree, but keep my own track of tree nodes or whatever, right
+
+so, the other thing I could do is....
+
+
+I mean, if I stored them as stacks, what the heck would I do with these stacks, I mean, the thing about stacks is the idea that they are randomly growing.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+x    index 01 stack [01]
+=    index 02 stack [02]
+(    index 03 stack [02,03]
+ 5    index 04 stack [02,03,04]
++    index 05 stack [02,03,05]
+2    index 06 stack [02,03,06]
+)    index 07 stack [02,07]
+-    index 08 stack [02,08]
+10   index 09 stack [02,09]
+/    index 10 stack [02,09,10]
+20   index 11 stack [02,09,11]
+;    kindex 12 stack [12]

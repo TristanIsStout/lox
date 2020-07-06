@@ -6,6 +6,8 @@
 
 #define MAX_SOURCE_CHARS 10000
 #define MAX_TOKEN_LITERAL_CHARS 100
+#define MAX_INSTRUCTION_PER_LINE 1000
+#define MAX_INSTRUCTIONS 100000
 
 int main(int argCount, char* args[]) {
   if (argCount != 2) {
@@ -104,7 +106,8 @@ int main(int argCount, char* args[]) {
   int lineNumber = 1;
   int sourceIndex = 0;
   indexChar = *sourceString;
-  bool hasParseError = false;
+  bool hasTokenizerError = false;
+
   while (indexChar != '\0') {
     if (indexChar == '(') {
       tokens[tokenIndex].tokenType = LEFT_PAREN;
@@ -241,6 +244,7 @@ int main(int argCount, char* args[]) {
       tokenIndex++;
 
     } else if (indexChar == '/') {
+      // skip comment lines, just increment the line count when we're done
       while (indexChar != '\n') {
           sourceIndex++;
           indexChar = *(sourceString + sourceIndex);
@@ -258,6 +262,7 @@ int main(int argCount, char* args[]) {
       tokens[tokenIndex].lineNumber = lineNumber;
       tokens[tokenIndex].startIndex = sourceIndex;
 
+      // iterate through the end of the string
       indexChar = *(sourceString + sourceIndex + 1);
       while (indexChar != '"') {
         if (indexChar == '\n') {
@@ -268,6 +273,7 @@ int main(int argCount, char* args[]) {
       }
       tokens[tokenIndex].endIndex = sourceIndex;
 
+      // store the string in the literal value (do not store the quotes)
       memcpy(
           tokens[tokenIndex].literal,
           (sourceString + tokens[tokenIndex].startIndex + 1),
@@ -276,22 +282,26 @@ int main(int argCount, char* args[]) {
       tokenIndex++;
 
     } else if (indexChar >= '0' && indexChar <= '9') {
+      // the token is anumber
       tokens[tokenIndex].tokenType = NUMBER;
       tokens[tokenIndex].startIndex = sourceIndex;
       tokens[tokenIndex].lineNumber = lineNumber;
 
+      // iterate through the rest of the non-decimal side of the number
       char nextChar = *(sourceString + sourceIndex + 1);
       while (nextChar >= '0' && nextChar <= '9') {
         sourceIndex++;
         indexChar = *(sourceString + sourceIndex);
         nextChar = *(sourceString + sourceIndex + 1);
       }
+      // if there is a decimal, than iterate through the decimal side of the number
       if (nextChar == '.') {
         sourceIndex++;
         char nextChar = *(sourceString + sourceIndex + 1);
         if (!(nextChar >= '0' && nextChar <= '9')) {
+          // if ther eis a decimal point that isn't followed by a decimal side, then we have a tokenizer error
           printf("Number has a dangling decimal point on line %d\n", lineNumber);
-          hasParseError = true;
+          hasTokenizerError = true;
         } else {
           while (nextChar >= '0' && nextChar <= '9') {
             sourceIndex++;
@@ -314,6 +324,7 @@ int main(int argCount, char* args[]) {
       tokens[tokenIndex].lineNumber = lineNumber;
       tokens[tokenIndex].startIndex = sourceIndex;
 
+      // iterate until we find the end of the identifier or keyword
       char nextChar = *(sourceString + sourceIndex + 1);
       while ((nextChar >= 'a' && nextChar <= 'z') 
           || (nextChar >= 'A' && nextChar <= 'Z') 
@@ -330,6 +341,7 @@ int main(int argCount, char* args[]) {
           sourceString + tokens[tokenIndex].startIndex,
           (tokens[tokenIndex].endIndex - tokens[tokenIndex].startIndex) + 1);
 
+      // if the literal matches a reserved keyword, set it to the appropriate token type
       if (strcmp("and", tokens[tokenIndex].literal) == 0) {
         tokens[tokenIndex].tokenType = AND;
 
@@ -379,6 +391,7 @@ int main(int argCount, char* args[]) {
         tokens[tokenIndex].tokenType = WHILE;
 
       } else {
+        // if it isn't a reserved keyword, then default ot an identifier
         tokens[tokenIndex].tokenType = IDENTIFIER;
       }
 
@@ -387,7 +400,7 @@ int main(int argCount, char* args[]) {
 
     } else {
       printf("Unexpected character '%c' on line %d.\n", indexChar, lineNumber + 1);
-      hasParseError = true;
+      hasTokenizerError = true;
     }
 
 
@@ -396,6 +409,7 @@ int main(int argCount, char* args[]) {
   }
 
   if (false) {
+    // set to true if we want 
     printf("printing the tokens...\n");
 
     for (int index = 0; index < tokenIndex; index++) {
@@ -457,6 +471,161 @@ int main(int argCount, char* args[]) {
 
     }
   }
+
+  if (hasTokenizerError) exit(1);
+
+  printf("Parsing the Tokens into the Instructions\n");
+
+  enum InstructionType {
+    NEG,
+    MULT,
+    DIV,
+    SUB,
+    ADD,
+    START_LINE,
+    END_LINE,
+    START_GROUP,
+    END_GROUP,
+    ASSIGN,
+    DECLARE,
+    LITERAL,
+    IDENT
+  };
+
+  struct Instruction {
+    enum InstructionType instructionType;
+    // todo tks why does this keep doing this? It doesn't make sense why this seg faults...
+    char* literal;
+    // char literal[MAX_TOKEN_LITERAL_CHARS];
+  };
+
+  struct Instruction instructionStack[MAX_INSTRUCTION_PER_LINE + 50];
+  int instructionStackIndex = 0;
+
+  struct Instruction instructions[MAX_INSTRUCTIONS + 10];
+  int instructionIndex = 0;
+
+  bool hasParseError = false;
+
+  for (int index = 0; index < tokenIndex; index++) {
+    // loop through each token
+
+    if (instructionIndex >= MAX_INSTRUCTIONS) {
+      printf("too many instructions to be parsed...\n");
+      hasParseError = true;;
+    }
+
+    if (instructionStackIndex == 0) {
+      // add a start of line instruction at the very beginning, and whenever the stack is cleared by end line
+      instructionStack[instructionStackIndex].instructionType = START_LINE;
+      instructionStackIndex++;
+    }
+
+    if (instructionStackIndex >= MAX_INSTRUCTION_PER_LINE) {
+      printf("too many instructions on line %d. pleass abbreviate\n", tokens[index].lineNumber);
+      hasParseError = true;
+      instructionStackIndex = 0;
+    }
+
+    if (tokens[index].tokenType == NUMBER) {
+      // numbers are just a literal
+      instructions[instructionIndex].instructionType = LITERAL;
+      // todo tks copy over the value
+      instructionIndex++;
+
+    } else if (tokens[index].tokenType == LEFT_PAREN) {
+      // lparens are just a marker for the instruction stack they sit there until the right parent chews through the stack
+      instructionStackIndex++;
+      instructionStack[instructionStackIndex].instructionType = START_GROUP;
+
+    } else if (tokens[index].tokenType == RIGHT_PAREN) {
+      // the stack is popped and instructions are written until the first left paren is found
+      while (instructionStackIndex != 0
+          && instructionStack[instructionStackIndex].instructionType != START_GROUP) {
+        instructions[instructionIndex].instructionType = instructionStack[instructionStackIndex].instructionType;
+        instructionIndex++;
+        instructionStackIndex--;
+      }
+      if (instructionStackIndex == 0) {
+        printf("unmatched righ parens on line %d\n", tokens[index].lineNumber);
+        hasParseError = true;
+
+      } else {
+        // the loop stops on the first l paren. pop the l paren as it is no longer used
+        instructionStackIndex--;
+      }
+
+    } else if (tokens[index].tokenType == SEMICOLON) {
+      // the stack is popped and instructions are written until the start line instruction is found
+      while (instructionStackIndex != 0
+          && instructionStack[instructionStackIndex].instructionType != START_LINE) {
+
+        if (instructionStack[instructionStackIndex].instructionType == START_GROUP
+            || instructionStack[instructionStackIndex].instructionType == END_GROUP) {
+          // the groupings should 
+          printf("unexpected parenthesis on line %d\n", tokens[index].lineNumber);
+          hasParseError = true;
+        }
+
+        instructions[instructionIndex].instructionType = instructionStack[instructionStackIndex].instructionType;
+        instructionStackIndex--;
+        instructionIndex++;
+      }
+
+      if (instructionStackIndex == 0) {
+        printf("error terminating line %d\n", tokens[index].lineNumber);
+        hasParseError = true;
+
+      } else {
+        // the loop stops on the first start line. pop the start line as it is no longer used
+        instructionStackIndex--;
+      }
+
+      // push a start line instruction after pushing to the stack
+      instructionStack[instructionStackIndex].instructionType = START_LINE;
+      instructionStackIndex++;
+
+    } else if (tokens[index].tokenType == MINUS) {
+
+    } else {
+      printf("unexpected token on line %d\n", tokens[index].lineNumber);
+      hasParseError = true;
+    }
+
+    if (instructionStackIndex != 0) {
+      printf("the file did not end properly, there was an error parsign the tokens\n");
+      hasParseError = true;
+    }
+
+    if (true) {
+      printf("printing the instructions...\n");
+      for (int index = 0; index < instructionIndex; index++) {
+
+        char* instructionType;
+        if (instructions[index].instructionType == NEG) instructionType = "NEG";
+        else if (instructions[index].instructionType == MULT) instructionType = "MULT";
+        else if (instructions[index].instructionType == DIV) instructionType = "DIV";
+        else if (instructions[index].instructionType == SUB) instructionType = "SUB";
+        else if (instructions[index].instructionType == ADD) instructionType = "ADD";
+        else if (instructions[index].instructionType == START_LINE) instructionType = "START_LINE";
+        else if (instructions[index].instructionType == END_LINE) instructionType = "END_LINE";
+        else if (instructions[index].instructionType == START_GROUP) instructionType = "START_GROUP";
+        else if (instructions[index].instructionType == END_GROUP) instructionType = "END_GROUP";
+        else if (instructions[index].instructionType == ASSIGN) instructionType = "ASSIGN";
+        else if (instructions[index].instructionType == DECLARE) instructionType = "DECLARE";
+        else if (instructions[index].instructionType == LITERAL) instructionType = "LITERAL";
+        else if (instructions[index].instructionType == IDENT) instructionType = "IDENT";
+    
+        printf("type: %s, value: \n", instructionType);
+      }
+
+    }
+
+    if (hasParseError) return 1;
+
+
+  }
+
 
 
 
