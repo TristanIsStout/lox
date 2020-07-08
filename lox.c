@@ -561,7 +561,7 @@ Token tokens[MAX_SOURCE_CHARS];
       while (parseInstructionStackCount > 0
           && parseInstructionStack[parseInstructionStackCount - 1].instructionType != START_GROUP) {
         printf("deleteme stack pop\n");
-        instructions[instructionCount].instructionType = parseInstructionStack[parseInstructionStackCount - 1].instructionType;
+        instructions[instructionCount].instructionType = parseInstructionStack[parseInstructionStackCount -1].instructionType;
         instructions[instructionCount].tokenIndex = parseInstructionStack[parseInstructionStackCount - 1].tokenIndex;
         instructionCount++;
         parseInstructionStackCount--;
@@ -597,8 +597,9 @@ Token tokens[MAX_SOURCE_CHARS];
       }
 
       if (parseInstructionStackCount > 0
-          && parseInstructionStack[parseInstructionStackCount - 1].instructionType > minusInstructionType) {
+          && parseInstructionStack[parseInstructionStackCount - 1].instructionType < minusInstructionType) {
         printf("delteme -\n");
+        printf("deleteme previous %d", parseInstructionStack[parseInstructionStackCount - 1].instructionType);
         instructions[instructionCount].instructionType = minusInstructionType;
         instructions[instructionCount].tokenIndex = parseTokenIndex;
         instructionCount++;
@@ -612,7 +613,7 @@ Token tokens[MAX_SOURCE_CHARS];
 
     } else if (tokens[parseTokenIndex].tokenType == PLUS) {
       if (parseInstructionStackCount > 0
-          && parseInstructionStack[parseInstructionStackCount].instructionType > ADD) {
+          && parseInstructionStack[parseInstructionStackCount - 1].instructionType < ADD) {
         printf("delteme +\n");
         instructions[instructionCount].instructionType = ADD;
         instructions[instructionCount].tokenIndex = parseTokenIndex;
@@ -627,7 +628,7 @@ Token tokens[MAX_SOURCE_CHARS];
 
     } else if (tokens[parseTokenIndex].tokenType == SLASH) {
       if (parseInstructionStackCount > 0
-          && parseInstructionStack[parseInstructionStackCount].instructionType > DIV) {
+          && parseInstructionStack[parseInstructionStackCount - 1].instructionType < DIV) {
         printf("delteme /\n");
         instructions[instructionCount].instructionType = DIV;
         instructions[instructionCount].tokenIndex = parseTokenIndex;
@@ -642,7 +643,7 @@ Token tokens[MAX_SOURCE_CHARS];
 
     } else if (tokens[parseTokenIndex].tokenType == STAR) {
       if (parseInstructionStackCount > 0
-          && parseInstructionStack[parseInstructionStackCount].instructionType > MULT) {
+          && parseInstructionStack[parseInstructionStackCount - 1].instructionType < MULT) {
         printf("delteme *\n");
         instructions[instructionCount].instructionType = MULT;
         instructions[instructionCount].tokenIndex = parseTokenIndex;
