@@ -225,3 +225,42 @@ x    index 01 stack [01]
 /    index 10 stack [02,09,10]
 20   index 11 stack [02,09,11]
 ;    kindex 12 stack [12]
+
+
+
+
+
+
+
+
+so, an interesting question is something like this, how do I know if it is a minus or a negation operator?
+
+well, let's give it some clues, the trick is basically that the if the previous thing is in fact an operator... or something like that, it is negation.
+
+So, if it is literal, or parents before that... then it is an operator...
+
+So let's just look at the previous thing... 
+
+I mean, if it's a paren, it's a minus
+if it's an ident, it's a minus
+if it's an equal, it's a minus
+  if it's
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

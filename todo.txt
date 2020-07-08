@@ -1,2 +1,1 @@
-there is something wrong with how I am thinking about writing to the stack versus unary operators
-I thought they would generally just... write, but they have to be put on the stack first, right?
+fix the bug with how the precedence causes the stack stuff to happen
