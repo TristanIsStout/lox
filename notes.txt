@@ -250,6 +250,329 @@ if it's an equal, it's a minus
 
 
 
+// 4 5 plus 6 2 mult 3 div minus 6 neg 7 div 8 neg mult 3 neg div 4 div 5 - 6 +kkf
+
+push declare
+write x
+pwrite declare
+push assign
+write 5
+push plus
+write 4
+pwrite plus
+push minus
+write 6
+push mult
+write 2
+pwrite mult
+push div
+write 3
+pwrite div
+pwrite minus
+push plus
+push neg
+write 6
+pwrite neg
+push div
+write 7
+pwrite div
+push mult
+push neg
+write 8
+pwrite neg
+push div
+push neg
+write 3
+pwrite neg
+push div
+write 4
+pwrite div
+push sub
+write 5
+pwrite sub
+push plus
+write 6
+pwrite plus
+pwrite assign
+
+// note that, for parens, all we need to know is that there is in fact a different instruction for a call start
+// like the start group is different than say a start function group
+// I also wouldn't mind if functinos have something a little more similar to their....
+// I wouldn't be that mad.. I mean that would be ok, I think the core differences is..
+// 
+// jeez, honestly if I can get rid of this, looping thign, I can get rid of like ALL of the tokens that I have generated, right?
+// 
+// well, that would be fun, and honestly it would be cool not to have this big ol data structure, right...?
+
+
+
+
+
+
+// Instruction
+literal: 4
+literal: 5
+literal: 6
+literal: 2
+i type: DIV
+literal: 3
+i type: ADD
+i type: NEG
+literal: 6
+i type: DIV
+literal: 7
+i type: NEG
+literal: 8
+i type: DIV
+i type: NEG
+literal: 3
+i type: DIV
+literal: 4
+i type: SUB
+literal: 5
+i type: ADD
+literal: 6
+
+
+
+4 + 5 - 6 * 2 / 3 + - 6 / 7 * -8 / -3 / 4 - 5 + 6
+
+4 5 plus 6 2 mult 3 div minus 6 neg 7 div 8 neg times 3 neg div 4 div plus 5 minus 6 plus
+4 5 6 2 MULT 4 3 MULT 4 DIV DIV ADD 6 7 MULT 4 MULT 8 MULT 4 3 4 MULT 4 5 MULT 4 6
+
+
+// IS THIS THAT MUCH BETTER THAN I TREE? WELL, MAINLY BECAUSE I HATE TREES, AND HOW THE HECK AM I GOING TO STORE THEM?
+// BY JUST DOING A HEAP ALLOCATION EVERY TIME? THAT DOESN'T SOUND LIKE A LOT OF FUN
+// so it has that benefit
+// as far as readability, it's not that much more readable, if i'm being honest, maybe if I put this in the opposite order?
+
+4 + 5 - 6 * 2 / 3 + - 6 / 7 * -8 / -3 / 4 - 5 + 6
+// 4 5 plus 6 2 mult 3 div minus 6 neg 7 div 8 neg times 3 neg div 4 div plus 5 minus 6 plus
+// like honestly, just reverse these ops and I'll get it
+// yeah, this is honestly not that much better than a tree, the tree would look something like
+//
+// so, yeah, the parse tree would be nasty
+// like, I don't even want to fix this
+//
+// 
+// 4 5 plus 6 2 mult 3 div minus 6 neg 7 div 8 neg times 3 neg div 4 div plus 5 minus 6 plus
+// 
+// 
+// plus 6  
+//      minus   5
+//              plus   div  4
+//                          neg    3
+//                     times   neg 8
+///                            div 7
+//                                 neg  6
+//              minus div 3
+//                    mult 2
+//  
+//       plus 4
+//            5
+// 
+// neither of these are really that much easier to read or that much easier to understand
+// my gut feeling is that typing these things is going to be a bitch either way, so I just need to do whatever I need to do to make them workout
+// I mean, I wouldn't be surprised if there are some advantages to this type of thing for typing, i.e. type left is equal to type right, or whatever
+// but honestly, the recursive descent thing isn't exactly easy, or exactly easier than whatever the heck I am doing right here
+// so, what this means is I do think that I'm getting closer here, I just also think that it is about time to start doing some tests... 
+// which is kind of fun, but also... no, it's kind of to the point where I need this to happen. I really don't need the tokens or whatever to happen because that is
+// just far to easy.
+// I'm not exaclty sure how to type cast this baby
+// 
+// hmm, so what can I do for tonight, like I could write the framework for testing things right away, that could be alright...
+// but I don't want to... just work on these tests, I would rather think these through...
+// 
+// so, hmm, this algorithm is close, but I'm not so sure about the pop until type behavior, but hey, maybe that is the only way to go about things, let's lok at this thang
+//
+// 
+//
+// 
+//
+
+
+// hmm, hmm, so the thing is that these numbers aren't causing the popping, is that the problem
+
+
+
+
+
+Instruction
+i type: LITERAL
+token:
+type: NUMBER
+literal: 4
+line: 1
+start: 0
+end: 0
+Instruction
+i type: LITERAL
+token:
+type: NUMBER
+literal: 5
+line: 1
+start: 4
+end: 4
+Instruction
+i type: LITERAL
+token:
+type: NUMBER
+literal: 6
+line: 1
+start: 8
+end: 8
+Instruction
+i type: LITERAL
+token:
+type: NUMBER
+literal: 2
+line: 1
+start: 12
+end: 12
+Instruction
+i type: MULT
+token:
+type: NUMBER
+literal: 4
+line: 1
+start: 0
+end: 0
+Instruction
+i type: LITERAL
+token:
+type: NUMBER
+literal: 3
+line: 1
+start: 16
+end: 16
+Instruction
+i type: MULT
+token:
+type: NUMBER
+literal: 4
+line: 1
+start: 0
+end: 0
+Instruction
+i type: DIV
+token:
+type: SLASH
+literal: 
+line: 1
+start: 14
+end: 14
+Instruction
+i type: DIV
+token:
+type: SLASH
+literal: 
+line: 1
+start: 14
+end: 14
+Instruction
+i type: ADD
+token:
+type: PLUS
+literal: 
+line: 1
+start: 18
+end: 18
+Instruction
+i type: LITERAL
+token:
+type: NUMBER
+literal: 6
+line: 1
+start: 22
+end: 22
+Instruction
+i type: LITERAL
+token:
+type: NUMBER
+literal: 7
+line: 1
+start: 26
+end: 26
+Instruction
+i type: MULT
+token:
+type: NUMBER
+literal: 4
+line: 1
+start: 0
+end: 0
+Instruction
+i type: MULT
+token:
+type: STAR
+literal: 
+line: 1
+start: 28
+end: 28
+Instruction
+i type: LITERAL
+token:
+type: NUMBER
+literal: 8
+line: 1
+start: 31
+end: 31
+Instruction
+i type: MULT
+token:
+type: NUMBER
+literal: 4
+line: 1
+start: 0
+end: 0
+Instruction
+i type: LITERAL
+token:
+type: NUMBER
+literal: 3
+line: 1
+start: 36
+end: 36
+Instruction
+i type: LITERAL
+token:
+type: NUMBER
+literal: 4
+line: 1
+start: 40
+end: 40
+Instruction
+i type: MULT
+token:
+type: NUMBER
+literal: 4
+line: 1
+start: 0
+end: 0
+Instruction
+i type: LITERAL
+token:
+type: NUMBER
+literal: 5
+line: 1
+start: 44
+end: 44
+Instruction
+i type: MULT
+token:
+type: NUMBER
+literal: 4
+line: 1
+start: 0
+end: 0
+Instruction
+i type: LITERAL
+token:
+type: NUMBER
+literal: 6
+line: 1
+start: 48
+end: 48
 
 
 
@@ -261,6 +584,84 @@ if it's an equal, it's a minus
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+nstruction
+i type: LITERAL
+literal 4
+Instruction
+i type: LITERAL
+literal 5
+Instruction
+i type: LITERAL
+literal 6
+Instruction
+i type: LITERAL
+literal 2
+Instruction
+i type: MULT
+literal 4
+Instruction
+i type: LITERAL
+literal 3
+Instruction
+i type: MULT
+literal 4
+Instruction
+i type: DIV
+Instruction
+i type: DIV
+Instruction
+i type: ADD
+Instruction
+i type: LITERAL
+literal 6
+Instruction
+i type: LITERAL
+literal 7
+Instruction
+i type: MULT
+literal 4
+Instruction
+i type: MULT
+Instruction
+i type: LITERAL
+literal 8
+Instruction
+i type: MULT
+literal 4
+Instruction
+i type: LITERAL
+literal 3
+Instruction
+i type: LITERAL
+literal 4
+Instruction
+i type: MULT
+literal 4
+Instruction
+i type: LITERAL
+literal 5
+Instruction
+i type: MULT
+literal 4
+Instruction
+i type: LITERAL
+literal 6
 
 
 

@@ -4,6 +4,9 @@
 #include <string.h>
 #include <errno.h>
 
+#define PRINT_TOKENS true
+#define PRINT_INSTRUCTIONS true
+
 int main(int argCount, char* args[]) {
   if (argCount != 2) {
     // validate command line args
@@ -45,46 +48,47 @@ int main(int argCount, char* args[]) {
   printf("Tokenizing the source string\n");
   
   #define MAX_TOKEN_LITERAL_CHARS 100
-typedef enum {
-  LEFT_PAREN,
-  RIGHT_PAREN,
-  LEFT_BRACE,
-  RIGHT_BRACE,
-  COMMA,
-  DOT,
-  MINUS,
-  PLUS,
-  SEMICOLON,
-  SLASH,
-  STAR,
-  BANG,
-  BANG_EQUAL,
-  EQUAL,
-  EQUAL_EQUAL,
-  GREATER,
-  GREATER_EQUAL,
-  LESS,
-  LESS_EQUAL,
-  IDENTIFIER,
-  STRING,
-  NUMBER,
-  AND,
-  CLASS,
-  ELSE,
-  FALSE,
-  FUN,
-  FOR,
-  IF,
-  NIL,
-  OR,
-  PRINT,
-  RETURN,
-  SUPER,
-  THIS,
-  TRUE,
-  VAR,
-  WHILE
-} TokenType;
+
+  typedef enum {
+    LEFT_PAREN,
+    RIGHT_PAREN,
+    LEFT_BRACE,
+    RIGHT_BRACE,
+    COMMA,
+    DOT,
+    MINUS,
+    PLUS,
+    SEMICOLON,
+    SLASH,
+    STAR,
+    BANG,
+    BANG_EQUAL,
+    EQUAL,
+    EQUAL_EQUAL,
+    GREATER,
+    GREATER_EQUAL,
+    LESS,
+    LESS_EQUAL,
+    IDENTIFIER,
+    STRING,
+    NUMBER,
+    AND,
+    CLASS,
+    ELSE,
+    FALSE,
+    FUN,
+    FOR,
+    IF,
+    NIL,
+    OR,
+    PRINT,
+    RETURN,
+    SUPER,
+    THIS,
+    TRUE,
+    VAR,
+    WHILE
+  } TokenType;
 
 typedef struct {
   TokenType tokenType;
@@ -96,6 +100,11 @@ typedef struct {
 
 int tokenCount = 0;
 Token tokens[MAX_SOURCE_CHARS];
+
+
+  Token prevToken;
+  Token indexToken;
+  Token nextToken;
 
 
   int lineNumber = 1;
@@ -596,65 +605,100 @@ Token tokens[MAX_SOURCE_CHARS];
         minusInstructionType = SUB;
       }
 
-      if (parseInstructionStackCount > 0
+      while (parseInstructionStackCount > 0
           && parseInstructionStack[parseInstructionStackCount - 1].instructionType < minusInstructionType) {
-        printf("delteme -\n");
-        printf("deleteme previous %d", parseInstructionStack[parseInstructionStackCount - 1].instructionType);
-        instructions[instructionCount].instructionType = minusInstructionType;
-        instructions[instructionCount].tokenIndex = parseTokenIndex;
+        instructions[instructionCount].instructionType = parseInstructionStack[parseInstructionStackCount].instructionType;
+        instructions[instructionCount].tokenIndex = parseInstructionStack[parseInstructionStackCount].tokenIndex;
         instructionCount++;
-
-      } else {
-        printf("delteme stack - \n");
-        parseInstructionStack[parseInstructionStackCount].instructionType = minusInstructionType;
-        parseInstructionStack[parseInstructionStackCount].tokenIndex = parseTokenIndex;
-        parseInstructionStackCount++;
+        parseInstructionStackCount--;
       }
+      printf("delteme stack - \n");
+      parseInstructionStack[parseInstructionStackCount].instructionType = minusInstructionType;
+      parseInstructionStack[parseInstructionStackCount].tokenIndex = parseTokenIndex;
+      parseInstructionStackCount++;
+     
 
     } else if (tokens[parseTokenIndex].tokenType == PLUS) {
-      if (parseInstructionStackCount > 0
+      while (parseInstructionStackCount > 0
           && parseInstructionStack[parseInstructionStackCount - 1].instructionType < ADD) {
-        printf("delteme +\n");
-        instructions[instructionCount].instructionType = ADD;
-        instructions[instructionCount].tokenIndex = parseTokenIndex;
+        instructions[instructionCount].instructionType = parseInstructionStack[parseInstructionStackCount].instructionType;
+        instructions[instructionCount].tokenIndex = parseInstructionStack[parseInstructionStackCount].tokenIndex;
         instructionCount++;
-
-      } else {
-        printf("delteme stack + \n");
-        parseInstructionStack[parseInstructionStackCount].instructionType = ADD;
-        parseInstructionStack[parseInstructionStackCount].tokenIndex = parseTokenIndex;
-        parseInstructionStackCount++;
+        parseInstructionStackCount--;
       }
+      printf("delteme stack + \n");
+      parseInstructionStack[parseInstructionStackCount].instructionType = ADD;
+      parseInstructionStack[parseInstructionStackCount].tokenIndex = parseTokenIndex;
+      parseInstructionStackCount++;
+//      printf("delteme stack - \n");
+//      parseInstructionStack[parseInstructionStackCount].instructionType = minusInstructionType;
+//      parseInstructionStack[parseInstructionStackCount].tokenIndex = parseTokenIndex;
+//      parseInstructionStackCount++;
+//      if (parseInstructionStackCount > 0
+//          && parseInstructionStack[parseInstructionStackCount - 1].instructionType < ADD) {
+//        printf("delteme +\n");
+//        instructions[instructionCount].instructionType = ADD;
+//        instructions[instructionCount].tokenIndex = parseTokenIndex;
+//        instructionCount++;
+//
+//      } else {
+//        printf("delteme stack + \n");
+//        parseInstructionStack[parseInstructionStackCount].instructionType = ADD;
+//        parseInstructionStack[parseInstructionStackCount].tokenIndex = parseTokenIndex;
+//        parseInstructionStackCount++;
+//      }
 
     } else if (tokens[parseTokenIndex].tokenType == SLASH) {
-      if (parseInstructionStackCount > 0
+      while (parseInstructionStackCount > 0
           && parseInstructionStack[parseInstructionStackCount - 1].instructionType < DIV) {
-        printf("delteme /\n");
-        instructions[instructionCount].instructionType = DIV;
-        instructions[instructionCount].tokenIndex = parseTokenIndex;
+        instructions[instructionCount].instructionType = parseInstructionStack[parseInstructionStackCount].instructionType;
+        instructions[instructionCount].tokenIndex = parseInstructionStack[parseInstructionStackCount].tokenIndex;
         instructionCount++;
-
-      } else {
-        printf("delteme stack / \n");
-        parseInstructionStack[parseInstructionStackCount].instructionType = DIV;
-        parseInstructionStack[parseInstructionStackCount].tokenIndex = parseTokenIndex;
-        parseInstructionStackCount++;
+        parseInstructionStackCount--;
       }
+      printf("delteme stack / \n");
+      parseInstructionStack[parseInstructionStackCount].instructionType = DIV;
+      parseInstructionStack[parseInstructionStackCount].tokenIndex = parseTokenIndex;
+      parseInstructionStackCount++;
+//      if (parseInstructionStackCount > 0
+//          && parseInstructionStack[parseInstructionStackCount - 1].instructionType < DIV) {
+//        printf("delteme /\n");
+//        instructions[instructionCount].instructionType = DIV;
+//        instructions[instructionCount].tokenIndex = parseTokenIndex;
+//        instructionCount++;
+//
+//      } else {
+//        printf("delteme stack / \n");
+//        parseInstructionStack[parseInstructionStackCount].instructionType = DIV;
+//        parseInstructionStack[parseInstructionStackCount].tokenIndex = parseTokenIndex;
+//        parseInstructionStackCount++;
+//      }
 
     } else if (tokens[parseTokenIndex].tokenType == STAR) {
-      if (parseInstructionStackCount > 0
+      while (parseInstructionStackCount > 0
           && parseInstructionStack[parseInstructionStackCount - 1].instructionType < MULT) {
-        printf("delteme *\n");
-        instructions[instructionCount].instructionType = MULT;
-        instructions[instructionCount].tokenIndex = parseTokenIndex;
+        instructions[instructionCount].instructionType = parseInstructionStack[parseInstructionStackCount].instructionType;
+        instructions[instructionCount].tokenIndex = parseInstructionStack[parseInstructionStackCount].tokenIndex;
         instructionCount++;
-
-      } else {
-        printf("delteme stack * \n");
-        parseInstructionStack[parseInstructionStackCount].instructionType = MULT;
-        parseInstructionStack[parseInstructionStackCount].tokenIndex = parseTokenIndex;
-        parseInstructionStackCount++;
+        parseInstructionStackCount--;
       }
+      printf("delteme stack * \n");
+      parseInstructionStack[parseInstructionStackCount].instructionType = MULT;
+      parseInstructionStack[parseInstructionStackCount].tokenIndex = parseTokenIndex;
+      parseInstructionStackCount++;
+//      if (parseInstructionStackCount > 0
+//          && parseInstructionStack[parseInstructionStackCount - 1].instructionType < MULT) {
+//        printf("delteme *\n");
+//        instructions[instructionCount].instructionType = MULT;
+//        instructions[instructionCount].tokenIndex = parseTokenIndex;
+//        instructionCount++;
+//
+//      } else {
+//        printf("delteme stack * \n");
+//        parseInstructionStack[parseInstructionStackCount].instructionType = MULT;
+//        parseInstructionStack[parseInstructionStackCount].tokenIndex = parseTokenIndex;
+//        parseInstructionStackCount++;
+//      }
 
     } else if (tokens[parseTokenIndex].tokenType == SEMICOLON) {
       printf("deleteme ;\n");
@@ -685,14 +729,39 @@ Token tokens[MAX_SOURCE_CHARS];
         parseInstructionStackCount--;
       }
 
-      //} else if (tokens[parseTokenIndex].tokenType == BANG) { 
-      //} else if (tokens[parseTokenIndex].tokenType == BANG_EQUAL) { 
+      // todo tks, I think that these are lower than the arithmatic, because
+      // 2 + 3 <= -3
+      // and we want this to turn into
+      // 
+      // 2 3 plus 3 neg leq
+      // write 2
+      // push +
+      // write 3
+      // while (stack > leq)
+      //  pop plus
+      // push leq
+      // push neg
+      // write 3
+      // pop neg
+      // pop leq
+      //
+
+      } else if (tokens[parseTokenIndex].tokenType == BANG) { 
+
+      } else if (tokens[parseTokenIndex].tokenType == BANG_EQUAL) { 
+
+      } else if (tokens[parseTokenIndex].tokenType == EQUAL_EQUAL) { 
+
+      } else if (tokens[parseTokenIndex].tokenType == GREATER) { 
+
+      } else if (tokens[parseTokenIndex].tokenType == GREATER_EQUAL) { 
+
+      } else if (tokens[parseTokenIndex].tokenType == LESS) { 
+
+      } else if (tokens[parseTokenIndex].tokenType == LESS_EQUAL) { 
+
       //} else if (tokens[parseTokenIndex].tokenType == EQUAL) { 
-      //} else if (tokens[parseTokenIndex].tokenType == EQUAL_EQUAL) { 
-      //} else if (tokens[parseTokenIndex].tokenType == GREATER) { 
-      //} else if (tokens[parseTokenIndex].tokenType == GREATER_EQUAL) { 
-      //} else if (tokens[parseTokenIndex].tokenType == LESS) { 
-      //} else if (tokens[parseTokenIndex].tokenType == LESS_EQUAL) { 
+
       //} else if (tokens[parseTokenIndex].tokenType == IDENTIFIER) { 
       //} else if (tokens[parseTokenIndex].tokenType == STRING) { 
       //} else if (tokens[parseTokenIndex].tokenType == NUMBER) { 
@@ -747,8 +816,9 @@ Token tokens[MAX_SOURCE_CHARS];
       else if (instructions[instructionIndex].instructionType == LITERAL) instructionTypeString = "LITERAL";
       else if (instructions[instructionIndex].instructionType == IDENT) instructionTypeString = "IDENT";
 
-      printf("Instruction\n");
-      printf("\ti type: %s\n", instructionTypeString);
+      if (instructions[instructionIndex].instructionType != LITERAL) {
+        printf(" %s", instructionTypeString);
+      }
 
       if (tokens[instructions[instructionIndex].tokenIndex].tokenType == LEFT_PAREN) tokenTypeString = "LEFT_PAREN";
       else if (tokens[instructions[instructionIndex].tokenIndex].tokenType == RIGHT_PAREN) tokenTypeString = "RIGHT_PAREN";
@@ -793,17 +863,17 @@ Token tokens[MAX_SOURCE_CHARS];
       if (tokens[instructions[instructionIndex].tokenIndex].tokenType == STRING
           || tokens[instructions[instructionIndex].tokenIndex].tokenType == IDENTIFIER
           || tokens[instructions[instructionIndex].tokenIndex].tokenType == NUMBER) {
-        literal = tokens[instructions[instructionIndex].tokenIndex].literal;
+        printf(" %s", literal = tokens[instructions[instructionIndex].tokenIndex].literal);
       } else {
         literal = "";
       }
 
-      printf("\ttoken:\n\t\ttype: %s\n\t\tliteral: %s\n\t\tline: %d\n\t\tstart: %d\n\t\tend: %d\n",
-          tokenTypeString,
-          literal,
-          tokens[instructions[instructionIndex].tokenIndex].lineNumber,
-          tokens[instructions[instructionIndex].tokenIndex].startIndex,
-          tokens[instructions[instructionIndex].tokenIndex].endIndex);
+//      printf("\ttoken:\n\t\ttype: %s\n\t\tliteral: %s\n\t\tline: %d\n\t\tstart: %d\n\t\tend: %d\n",
+//          tokenTypeString,
+//          literal,
+//          tokens[instructions[instructionIndex].tokenIndex].lineNumber,
+//          tokens[instructions[instructionIndex].tokenIndex].startIndex,
+//          tokens[instructions[instructionIndex].tokenIndex].endIndex);
     }
 
     printf("\n");

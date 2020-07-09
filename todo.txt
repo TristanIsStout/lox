@@ -1,1 +1,2 @@
-fix the bug with how the precedence causes the stack stuff to happen
+so, I made some initial fixes, but I'm not exactly sure that this is correct
+I need to flesh out what I really want to happen, and propable write out this intermediate representation somewhere else
